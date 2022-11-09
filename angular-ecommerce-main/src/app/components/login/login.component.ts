@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
-import { OktaAuthService } from '@okta/okta-angular';
-import * as OktaSignIn from '@okta/okta-signin-widget'
+import { Component, Inject, OnInit } from '@angular/core';
+import { OKTA_AUTH } from '@okta/okta-angular';
+import { OktaAuth } from '@okta/okta-auth-js';
+import OktaSignIn from '@okta/okta-signin-widget';
+
 import myAppConfig from '../../config/my-app-config';
+
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
@@ -9,13 +12,13 @@ import myAppConfig from '../../config/my-app-config';
 })
 export class LoginComponent implements OnInit {
 
-  oktaSignIn: any;
+  oktaSignin: any;
 
-  constructor(private oktaAuthService: OktaAuthService) {
-    this.oktaSignIn = new OktaSignIn({
-      features: {
-        registration: true
-      },
+  constructor(@Inject(OKTA_AUTH) private oktaAuth: OktaAuth) {
+
+    this.oktaSignin = new OktaSignIn({
+      features: { registration:true },
+      logo: 'assets/images/logo.png',
       baseUrl: myAppConfig.oidc.issuer.split('/oauth2')[0],
       clientId: myAppConfig.oidc.clientId,
       redirectUri: myAppConfig.oidc.redirectUri,
@@ -24,26 +27,23 @@ export class LoginComponent implements OnInit {
         issuer: myAppConfig.oidc.issuer,
         scopes: myAppConfig.oidc.scopes
       }
-    }
-    )
-  }
+    });
+   }
 
   ngOnInit(): void {
-    this.oktaSignIn.remove();
+    this.oktaSignin.remove();
 
-    this.oktaSignIn.renderEl({ 
-      el: '#okta-signin-widget' //same as the div tag in login html
-    },
-      (response) => {
+    this.oktaSignin.renderEl({
+      el: '#okta-sign-in-widget'}, // this name should be same as div tag id in login.component.html
+      (response: any) => {
         if (response.status === 'SUCCESS') {
-          this.oktaAuthService.signInWithRedirect();
+          this.oktaAuth.signInWithRedirect();
         }
       },
-      (error) => {
-        console.log('error');
+      (error: any) => {
         throw error;
-        
-      });
+      }
+    );
   }
 
 }
